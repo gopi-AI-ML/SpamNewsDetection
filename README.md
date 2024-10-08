@@ -34,11 +34,5 @@ This project aims to build a machine learning model to detect spam news articles
    python main.py
    Use the Train Model button to train the model with your dataset.
    Use the Spam Detection feature to input news articles and receive predictions.
-
-## Acknowledgments
-    Importnant Libraries
-   ```bash
-   Natural Language Toolkit (NLTK)
-   Scikit-learn
-   Tkinter
+   
    -----------------------------------------------------
