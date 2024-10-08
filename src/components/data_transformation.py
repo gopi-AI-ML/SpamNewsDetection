@@ -19,6 +19,7 @@ else:
     nltk.download("wordnet")
     nltk.download("stopwords")
 
+logging.info("Data Trasnformation Started")
 @dataclass
 class DataTransformationConfig:
     preprocessor_obj_file_path: str = os.path.join("pickle_files", "preprocessor.pkl")

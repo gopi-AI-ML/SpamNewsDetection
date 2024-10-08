@@ -23,7 +23,7 @@ def main():
         logging.info("Model Training started.......")
         model_trainer = ModelTrainer()
         best_model = model_trainer.train_and_evaluate(train_data, train_labels, test_data, test_labels)
-        logging.info(f"Model training completed. model_path: {vectorizer_path}")
+        logging.info(f"Model training completed. model_path: {vectorizer_path} and best_model = {best_model}")
 
     except Exception as e:
         raise CustomException(e,sys)
