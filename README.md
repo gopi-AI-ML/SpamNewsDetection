@@ -10,7 +10,7 @@ This project aims to build a machine learning model to detect spam news articles
 - **pickle_files**: Directory for saving trained models and pickle files.
 
 - **python version**: python==3.12.5
-## py
+
 ## Setup
 1. Install the necessary dependencies:
    ```bash
@@ -26,10 +26,10 @@ This project aims to build a machine learning model to detect spam news articles
    Create a python environment by using ( conda create -p venv python==3.12.5 -y )
    and press ( conda activate venv/ )
 
-3. Usage
+## Usage
+1. Environment for running application
    ```bash
    Run the application:
-   bash
    Copy code
    python main.py
    Use the Train Model button to train the model with your dataset.
