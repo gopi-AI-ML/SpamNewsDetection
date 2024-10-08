@@ -7,7 +7,6 @@ This project aims to build a machine learning model to detect spam news articles
 ## Project Structure
 - **artifacts**   : Contains raw and processed datasets.
 - **src**         : Source code for data ingestion, data_transformation, model_training and evaluation.
-- **Models**      : Contains Best model.
 - **pickle_files**: Directory for saving trained models and pickle files.
 - **app**         : Flask application for deploying the model as an API.
 

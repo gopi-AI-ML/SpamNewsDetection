@@ -14,7 +14,7 @@ from src.utils import save_object
 
 @dataclass
 class ModelTrainerConfig:
-    trained_model_file_path: str = os.path.join("models", "best_model.pkl")
+    trained_model_file_path: str = os.path.join("pickle_files", "best_model.pkl")
 
 class ModelTrainer:
     def __init__(self):
