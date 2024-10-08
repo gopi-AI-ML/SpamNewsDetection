@@ -36,7 +36,7 @@ This project aims to build a machine learning model to detect spam news articles
    Use the Spam Detection feature to input news articles and receive predictions.
 
 ## Acknowledgments
-   Environment for running application
+    Importnant Libraries
    ```bash
    Natural Language Toolkit (NLTK)
    Scikit-learn
