@@ -27,7 +27,7 @@ This project aims to build a machine learning model to detect spam news articles
    and press ( conda activate venv/ )
 
 ## Usage
-1. Environment for running application
+   Environment for running application
    ```bash
    Run the application:
    Copy code
@@ -35,7 +35,8 @@ This project aims to build a machine learning model to detect spam news articles
    Use the Train Model button to train the model with your dataset.
    Use the Spam Detection feature to input news articles and receive predictions.
 
-4. Acknowledgments
+## Acknowledgments
+   Environment for running application
    ```bash
    Natural Language Toolkit (NLTK)
    Scikit-learn
