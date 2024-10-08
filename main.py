@@ -8,7 +8,6 @@ from src.utils import load_object
 from src.components.data_ingestion import DataIngestion
 from src.components.data_transformation import DataTransformation
 from src.components.model_trainer import ModelTrainer
-from user_interface import SpamDetector  # Make sure this matches your actual file structure
 
 class SpamDetector:
     def __init__(self):
@@ -58,7 +57,7 @@ class SpamDetectorApp:
         self.train_button = tk.Button(self.button_frame, text="Train Model", command=self.train_model, bg="#FF9800", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
         self.train_button.pack(side="left", padx=10)
 
-        self.test_button = tk.Button(self.button_frame, text="Test for Spam", command=self.show_test_frame, bg="#388E3C", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
+        self.test_button = tk.Button(self.button_frame, text="Spam Detection", command=self.show_test_frame, bg="#388E3C", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
         self.test_button.pack(side="right", padx=10)
 
         # Input Frame for Testing
@@ -107,9 +106,14 @@ class SpamDetectorApp:
             model_trainer = ModelTrainer()
             best_model = model_trainer.train_and_evaluate(X_train, y_train, X_test, y_test)  # Pass the datasets here
             
+            # Load the best model and vectorizer for future predictions
+            self.spam_detector.vectorizer = load_object(vectorizer_path)  # Load the new vectorizer
+            self.spam_detector.model = best_model  # Update the model in the spam detector
+            
             messagebox.showinfo("Training Complete", "The model has been trained successfully!")
         except Exception as e:
             messagebox.showerror("Training Error", f"An error occurred while training: {str(e)}")
+
 
     def show_test_frame(self):
         # Show the testing input frame

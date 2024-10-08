@@ -28,6 +28,7 @@ class ModelTrainer:
                 "Logistic Regression": LogisticRegression(),
                 "Random Forest": RandomForestClassifier()
             }
+            logging.info("Training the Model.........")
 
             best_model = None
             best_accuracy = 0

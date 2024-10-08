@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from src.logger import logging
 from src.exception import CustomException
 from src.utils import save_object
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -18,7 +19,7 @@ else:
     nltk.download("wordnet")
     nltk.download("stopwords")
 
-logging.info("Data Trasnformation Started")
+logging.info("Data Trasnformation Running...")
 @dataclass
 class DataTransformationConfig:
     preprocessor_obj_file_path: str = os.path.join("pickle_files", "preprocessor.pkl")
