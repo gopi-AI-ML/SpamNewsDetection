@@ -8,11 +8,36 @@ This project aims to build a machine learning model to detect spam news articles
 - **artifacts**   : Contains raw and processed datasets.
 - **src**         : Source code for data ingestion, data_transformation, model_training and evaluation.
 - **pickle_files**: Directory for saving trained models and pickle files.
-- **app**         : Flask application for deploying the model as an API.
 
+- **python version**: python==3.12.5
+## py
 ## Setup
 1. Install the necessary dependencies:
    ```bash
    pip install -r requirements.txt
 
------------------------------------------------------
+
+2. Process for creating Environment:
+   ```bash
+   Crete a GitHub Repository
+   Create a Folder in PC
+   Go to Folder path and open vscode using ( code .)
+   Open new terminal
+   Create a python environment by using ( conda create -p venv python==3.12.5 -y )
+   and press ( conda activate venv/ )
+
+3. Usage
+   ```bash
+   Run the application:
+   bash
+   Copy code
+   python main.py
+   Use the Train Model button to train the model with your dataset.
+   Use the Spam Detection feature to input news articles and receive predictions.
+
+4. Acknowledgments
+   ```bash
+   Natural Language Toolkit (NLTK)
+   Scikit-learn
+   Tkinter
+   -----------------------------------------------------
