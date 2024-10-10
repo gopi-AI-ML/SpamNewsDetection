@@ -1,10 +1,12 @@
-import os
+import os,sys
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, simpledialog, ttk
 import threading
 from src.components.model_trainer import ModelTrainer
-from src.utils import load_object,save_object
+from src.utils import load_object, save_object
 from src.exception import CustomException
+from src.components.data_ingestion import DataIngestion  # Importing DataIngestion
+from src.components.data_transformation import DataTransformation  # Importing DataTransformation
 
 class SpamDetectorApp:
     def __init__(self, master):
@@ -38,21 +40,21 @@ class SpamDetectorApp:
         self.spam_label.pack(pady=10)
 
         # Buttons for spam model
-        self.train_spam_mail_button = tk.Button(self.spam_frame, text="Train SPAM MAIL Model", command=self.start_training_spam_mail, width=20, bg='lightgreen')
+        self.train_spam_mail_button = tk.Button(self.spam_frame, text="MAIL DETECTION", command=self.start_training_spam_mail, width=20, bg='lightgreen')
         self.train_spam_mail_button.pack(pady=10)
 
-        self.test_spam_mail_button = tk.Button(self.spam_frame, text="Test SPAM MAIL Model", command=self.test_spam_mail_model, width=20, bg='lightcoral')
+        self.test_spam_mail_button = tk.Button(self.spam_frame, text="Enter Your mail..", command=self.test_spam_mail_model, width=20, bg='lightcoral')
         self.test_spam_mail_button.pack(pady=10)
 
         # Label for fake news model frame
-        self.fake_news_label = tk.Label(self.fake_news_frame, text="FAKE NEWS Model", font=("Helvetica", 16))
+        self.fake_news_label = tk.Label(self.fake_news_frame, text="NEWS DETECTION", font=("Helvetica", 16))
         self.fake_news_label.pack(pady=10)
 
         # Buttons for fake news model
         self.train_fake_news_button = tk.Button(self.fake_news_frame, text="Train FAKE NEWS Model", command=self.start_training_fake_news, width=20, bg='lightblue')
         self.train_fake_news_button.pack(pady=10)
 
-        self.test_fake_news_button = tk.Button(self.fake_news_frame, text="Test FAKE NEWS Model", command=self.test_fake_news_model, width=20, bg='lightyellow')
+        self.test_fake_news_button = tk.Button(self.fake_news_frame, text="Enter Your News..", command=self.test_fake_news_model, width=20, bg='lightyellow')
         self.test_fake_news_button.pack(pady=10)
 
         # Progress bar
@@ -110,7 +112,6 @@ class SpamDetectorApp:
             self.progress_bar.stop()  # Stop the progress bar
             self.train_spam_mail_button.config(state='normal')  # Re-enable button
 
-
     def train_fake_news_model(self):
         self.log_area.delete(1.0, tk.END)  # Clear the log area
         self.progress_bar.start()  # Start the progress bar
@@ -118,19 +119,28 @@ class SpamDetectorApp:
         self.master.update()  # Update the GUI
 
         try:
-            # Implement the training logic for the fake news model here
-            # Example:
-            # fake_news_classifier = FakeNewsClassifier(...)
-            # fake_news_classifier.train_model(...)
+            # Load data for fake news
+            data_ingestion = DataIngestion()
+            train_data, test_data = data_ingestion.initiate_data_ingestion()
+            
+            # Transform data            
+            data_transformation = DataTransformation()
+            X_train, X_test, Y_train, Y_test,_ = data_transformation.initiate_data_transformation("artifacts/train.csv", "artifacts/test.csv")
+            
+            # Train the model 
+            trainer = ModelTrainer()
+            trainer.train_and_evaluate(X_train, X_test, Y_train, Y_test)
 
             self.log_area.insert(tk.END, "FAKE NEWS Model trained successfully!\n")
             messagebox.showinfo("Success", "FAKE NEWS Model trained successfully!")
         except Exception as e:
             self.log_area.insert(tk.END, f"An error occurred during training: {str(e)}\n")
-            messagebox.showerror("Error", f"An error occurred during training: {str(e)}")
+            raise CustomException(e,sys)
+            messagebox.showerror(e)
         finally:
             self.progress_bar.stop()  # Stop the progress bar
             self.train_fake_news_button.config(state='normal')  # Re-enable button
+
 
     def test_spam_mail_model(self):
         # Check if the spam mail model exists
@@ -168,7 +178,7 @@ class SpamDetectorApp:
 
         try:
             # Prompt user for input text
-            user_input = simpledialog.askstring("Input", "Enter the message to test:")
+            user_input = simpledialog.askstring("Input", "Enter the news to test:")
             if user_input:
                 # Load the vectorizer and model
                 vectorizer = load_object(self.fake_news_model_vectorizer)
@@ -181,8 +191,8 @@ class SpamDetectorApp:
                 prediction = trained_model.predict(input_data)
 
                 # Show the prediction result
-                result = "SPAM" if prediction[0] == 1 else "NOT SPAM"
-                messagebox.showinfo("Prediction Result", f"The message is: {result}")
+                result = "FAKE" if prediction[0] == 1 else "REAL"
+                messagebox.showinfo("Prediction Result", f"The news is: {result}")
 
         except CustomException as e:
             self.log_area.insert(tk.END, f"An error occurred during testing: {str(e)}\n")
