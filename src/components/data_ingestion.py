@@ -18,7 +18,7 @@ class DataIngestion:
         self.ingestion_config = DataIngestionConfig()
 
     def initiate_data_ingestion(self):
-        logging.info("Starting the data ingestion process...")
+        logging.info("Running data ingestion process...")
 
         try:
             # Load datasets and combine them

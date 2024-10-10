@@ -1,137 +1,123 @@
-import re
+import os
+import sys
 import tkinter as tk
-
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from tkinter import messagebox
-from src.utils import load_object
+from tkinter import messagebox, scrolledtext, simpledialog, ttk
+import threading
 from src.components.data_ingestion import DataIngestion
 from src.components.data_transformation import DataTransformation
 from src.components.model_trainer import ModelTrainer
-
-class SpamDetector:
-    def __init__(self):
-        # Load the vectorizer and model
-        self.vectorizer = load_object("pickle_files/preprocessor.pkl")
-        self.model = load_object("pickle_files/best_model.pkl")
-
-    def clean_text(self, text):
-        lemmatizer = WordNetLemmatizer()
-        stop_words = set(stopwords.words("english"))
-
-        text = text.lower()
-        text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
-        text = re.sub("[^a-z]", " ", text)
-        text = re.sub(r'\s+', " ", text).strip()
-        words = text.split()
-        lemmatized_words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
-        return " ".join(lemmatized_words)
-
-    def predict(self, text):
-        cleaned_text = self.clean_text(text)
-        text_vectorized = self.vectorizer.transform([cleaned_text]).toarray()
-        prediction = self.model.predict(text_vectorized)
-        return prediction[0]
+from src.utils import load_object, save_object
+from src.exception import CustomException
 
 class SpamDetectorApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Spam News Detector")
-        self.root.geometry("600x600")
-        self.root.configure(bg="#F0F4C3")  # Light yellow background color
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Spam Detector")
+        self.master.geometry("600x500")
+        
+        # Create main frame
+        self.main_frame = tk.Frame(master)
+        self.main_frame.pack(padx=10, pady=10)
 
-        # Initialize the spam detector
-        self.spam_detector = SpamDetector()
+        # Ensure necessary directories exist
+        self.check_and_create_directories()
 
-        # Title Frame
-        self.title_frame = tk.Frame(root, bg="#81C784", bd=2)
-        self.title_frame.pack(fill="x")
+        self.model_trainer = ModelTrainer()
+        self.trained_model_path = "pickle_files/best_model.pkl"  # Path for the trained model
+        self.vectorizer_path = "pickle_files/preprocessor.pkl"  # Path for the preprocessor
 
-        self.title_label = tk.Label(self.title_frame, text="Spam News Detector", bg="#81C784", fg="white", font=("Helvetica", 20, "bold"))
-        self.title_label.pack(pady=10)
+        # Buttons for training and testing
+        self.train_button = tk.Button(self.main_frame, text="Train SPAM Model", command=self.start_training)
+        self.train_button.grid(row=0, column=0, padx=5, pady=10)
 
-        # Button Frame for Training and Testing
-        self.button_frame = tk.Frame(root, bg="#F0F4C3", bd=2)
-        self.button_frame.pack(pady=20)
+        self.test_button = tk.Button(self.main_frame, text="Test SPAM Model", command=self.test_model)
+        self.test_button.grid(row=0, column=1, padx=5, pady=10)
 
-        self.train_button = tk.Button(self.button_frame, text="Train Model", command=self.train_model, bg="#FF9800", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
-        self.train_button.pack(side="left", padx=10)
+        # Progress bar
+        self.progress_bar = ttk.Progressbar(self.main_frame, orient=tk.HORIZONTAL, length=400, mode='determinate')
+        self.progress_bar.grid(row=1, column=0, columnspan=2, padx=5, pady=10)
 
-        self.test_button = tk.Button(self.button_frame, text="Spam Detection", command=self.show_test_frame, bg="#388E3C", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
-        self.test_button.pack(side="right", padx=10)
+        # Text widget for displaying training logs
+        self.log_area = scrolledtext.ScrolledText(self.main_frame, width=60, height=15, state='normal', wrap=tk.WORD)
+        self.log_area.grid(row=2, column=0, columnspan=2, padx=5, pady=10)
 
-        # Input Frame for Testing
-        self.input_frame = tk.Frame(root, bg="#F0F4C3", bd=2)
-        self.input_frame.pack(pady=20)
+    def check_and_create_directories(self):
+        # Create required directories if they don't exist
+        os.makedirs('artifacts', exist_ok=True)
+        os.makedirs('pickle_files', exist_ok=True)
 
-        self.label = tk.Label(self.input_frame, text="Enter News Article Text:", bg="#F0F4C3", font=("Helvetica", 14))
-        self.label.pack(pady=10)
-
-        self.text_entry = tk.Text(self.input_frame, height=10, width=50, bg="#ffffff", fg="#333333", font=("Helvetica", 12), bd=2, relief="groove")
-        self.text_entry.pack(pady=10)
-
-        # Predict Button for Testing
-        self.predict_button = tk.Button(self.input_frame, text="Predict", command=self.predict, bg="#388E3C", fg="white", font=("Helvetica", 12, "bold"), bd=0, padx=10, pady=5)
-        self.predict_button.pack()
-
-        # Result Frame
-        self.result_frame = tk.Frame(root, bg="#F0F4C3", bd=2)
-        self.result_frame.pack(pady=20)
-
-        self.result_label = tk.Label(self.result_frame, text="", font=("Helvetica", 14, "bold"), bg="#F0F4C3")
-        self.result_label.pack(pady=10)
-
-        # Footer Frame
-        self.footer_frame = tk.Frame(root, bg="#F0F4C3", bd=2)
-        self.footer_frame.pack(side="bottom", pady=5)
-
-        self.footer_label = tk.Label(self.footer_frame, text="Spam News Detection App", bg="#F0F4C3", font=("Helvetica", 10, "italic"))
-        self.footer_label.pack()
-
-        # Initially hide the input and result frames
-        self.input_frame.pack_forget()
-        self.result_frame.pack_forget()
+    def start_training(self):
+        # Start the training in a separate thread
+        self.train_button.config(state='disabled')  # Disable button to prevent multiple clicks
+        thread = threading.Thread(target=self.train_model)
+        thread.start()
 
     def train_model(self):
+        self.log_area.delete(1.0, tk.END)  # Clear the log area
+        self.progress_bar.start()  # Start the progress bar
         try:
-            # Initialize data ingestion to load the datasets
+            # Data ingestion
+            self.log_area.insert(tk.END, "Starting data ingestion...\n")
+            self.master.update()  # Update the GUI
+            
             data_ingestion = DataIngestion()
-            train_data_path, test_data_path = data_ingestion.initiate_data_ingestion()  # Load your data
-            
-            # Initialize data transformation
-            data_transform = DataTransformation()
-            X_train, y_train, X_test, y_test, vectorizer_path = data_transform.initiate_data_transformation(train_data_path, test_data_path)
-            
-            # Now that we have our datasets, we can train the model
-            model_trainer = ModelTrainer()
-            best_model = model_trainer.train_and_evaluate(X_train, y_train, X_test, y_test)  # Pass the datasets here
-            
-            # Load the best model and vectorizer for future predictions
-            self.spam_detector.vectorizer = load_object(vectorizer_path)  # Load the new vectorizer
-            self.spam_detector.model = best_model  # Update the model in the spam detector
-            
-            messagebox.showinfo("Training Complete", "The model has been trained successfully!")
-        except Exception as e:
-            messagebox.showerror("Training Error", f"An error occurred while training: {str(e)}")
+            train_data_path, test_data_path = data_ingestion.initiate_data_ingestion()
 
+            # Data transformation
+            self.log_area.insert(tk.END, "Starting data transformation...\n")
+            self.master.update()
+            
+            data_transformation = DataTransformation()
+            X_train, y_train, X_test, y_test, preprocessor_path = data_transformation.initiate_data_transformation(train_data_path, test_data_path)
 
-    def show_test_frame(self):
-        # Show the testing input frame
-        self.input_frame.pack(pady=20)
-        self.result_frame.pack(pady=20)
+            # Model training
+            self.log_area.insert(tk.END, "Training the model...\n")
+            self.master.update()
+            
+            best_model = self.model_trainer.train_and_evaluate(X_train, y_train, X_test, y_test)
+            self.log_area.insert(tk.END, "SPAM Model trained successfully!\n")
+            self.master.update()
+            messagebox.showinfo("Success", "SPAM Model application trained successfully!")
 
-    def predict(self):
-        user_input = self.text_entry.get("1.0", tk.END).strip()
-        if not user_input:
-            messagebox.showwarning("Input Error", "Please enter valid text!")
+        except CustomException as e:
+            # Show error message only during training
+            self.log_area.insert(tk.END, f"An error occurred during training: {str(e)}\n")
+            self.master.update()
+            messagebox.showerror("Error", f"An error occurred during training: {str(e)}")
+        finally:
+            self.progress_bar.stop()  # Stop the progress bar
+            self.train_button.config(state='normal')  # Re-enable button
+
+    def test_model(self):
+        # Check if the model exists
+        if not os.path.exists(self.trained_model_path) or not os.path.exists(self.vectorizer_path):
+            messagebox.showwarning("Warning", "SPAM model is not trained yet. Please train the model first!")
             return
 
         try:
-            prediction = self.spam_detector.predict(user_input)  # Use the instance variable
-            result_message = "The Given Text is SPAM !!!" if prediction == 1 else "Not Spam"
-            self.result_label.config(text=result_message, fg="#D32F2F" if prediction == 1 else "#388E3C")  # Red for spam, green for not spam
-        except Exception as e:
-            messagebox.showerror("Prediction Error", f"An error occurred: {str(e)}")
+            # Prompt user for input text
+            user_input = simpledialog.askstring("Input", "Enter the message to test:")
+            if user_input:
+                # Load the vectorizer
+                vectorizer = load_object(self.vectorizer_path)
+
+                # Transform the input data
+                input_data = vectorizer.transform([user_input]).toarray()
+
+                # Load the trained model
+                trained_model = load_object(self.trained_model_path)
+
+                # Predict using the trained model
+                prediction = trained_model.predict(input_data)
+
+                # Show the prediction result
+                result = "SPAM" if prediction[0] == 1 else "NOT SPAM"
+                messagebox.showinfo("Prediction Result", f"The message is: {result}")
+
+        except CustomException as e:
+            # No message box shown here
+            self.log_area.insert(tk.END, f"An error occurred during testing: {str(e)}\n")
+            self.master.update()
 
 if __name__ == "__main__":
     root = tk.Tk()
