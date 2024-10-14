@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, simpledialog, ttk
 import threading
@@ -16,7 +17,7 @@ class SpamDetectorApp:
         self.master.resizable(True, True)
 
         # Main frame with deep background color
-        self.main_frame = tk.Frame(master, bg="#20B2AA")  # Light Sea Green for the main background
+        self.main_frame = tk.Frame(master, bg="#20B2AA")
         self.main_frame.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
 
         # Main heading label
@@ -24,10 +25,10 @@ class SpamDetectorApp:
         self.main_heading.pack(pady=10)
 
         # Spam frame and Fake news frame with green and blue color themes
-        self.spam_frame = tk.Frame(self.main_frame, bd=2, relief=tk.RAISED, padx=10, pady=10, bg="#00FA9A")  # Medium Spring Green for spam section
+        self.spam_frame = tk.Frame(self.main_frame, bd=2, relief=tk.RAISED, padx=10, pady=10, bg="#00FA9A")
         self.spam_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.fake_news_frame = tk.Frame(self.main_frame, bd=2, relief=tk.RAISED, padx=10, pady=10, bg="#007BFF")  # Bright Blue for fake news section
+        self.fake_news_frame = tk.Frame(self.main_frame, bd=2, relief=tk.RAISED, padx=10, pady=10, bg="#007BFF")
         self.fake_news_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         # Ensure necessary directories exist
@@ -35,7 +36,7 @@ class SpamDetectorApp:
 
         self.model_trainer = ModelTrainer()
         self.fake_news_model_path = "pickle_files/fake_news_model.pkl"
-        self.fake_news_model_vectorizer = "pickle_files/fakeNews_Vectorizer.pkl"
+        self.fake_news_model_vectorizer_path = "pickle_files/fakeNews_Vectorizer.pkl"
         self.spam_mail_model_path = "pickle_files/spamMail_model.pkl"
         self.spam_mail_vectorizer_path = "pickle_files/spamMail_Vectorizer.pkl"
 
@@ -93,7 +94,7 @@ class SpamDetectorApp:
         thread.start()
 
     def train_spam_mail_model(self):
-        self.log_area.delete(1.0, tk.END)
+        self.log_area.delete(1.0, tk.END)  # Clear log area
         self.progress_bar.start()
         self.log_area.insert(tk.END, "Training of SPAM MAIL model started...\n")
         self.master.update()
@@ -105,14 +106,14 @@ class SpamDetectorApp:
             self.log_area.insert(tk.END, "SPAM MAIL Model trained successfully!\n")
             messagebox.showinfo("Success", "SPAM MAIL Model trained successfully!")
         except Exception as e:
-            self.log_area.insert(tk.END, f"ERROR :{CustomException(e, sys)}")
-            messagebox.showerror(f"ERROR :{CustomException(e, sys)}")
+            self.log_area.insert(tk.END, f"ERROR: {str(e)}")  # Provide specific error message
+            messagebox.showerror("Error", f"ERROR: {str(e)}")  # Provide specific error message
         finally:
             self.progress_bar.stop()
             self.train_spam_mail_button.config(state='normal')
 
     def train_fake_news_model(self):
-        self.log_area.delete(1.0, tk.END)
+        self.log_area.delete(1.0, tk.END)  # Clear log area
         self.progress_bar.start()
         self.log_area.insert(tk.END, "Training FAKE NEWS model started...\n")
         self.master.update()
@@ -130,8 +131,8 @@ class SpamDetectorApp:
             self.log_area.insert(tk.END, "FAKE NEWS Detection Model trained successfully!\n")
             messagebox.showinfo("Success", "FAKE NEWS Model trained successfully!")
         except Exception as e:
-            self.log_area.insert(tk.END, f"ERROR :{CustomException(e, sys)}")
-            messagebox.showerror(f"ERROR :{CustomException(e, sys)}")
+            self.log_area.insert(tk.END, f"ERROR: {str(e)}")  # Provide specific error message
+            messagebox.showerror("Error", f"ERROR: {str(e)}")  # Provide specific error message
         finally:
             self.progress_bar.stop()
             self.train_fake_news_button.config(state='normal')
@@ -153,7 +154,7 @@ class SpamDetectorApp:
                 result = "The given text is SPAM!!" if prediction[0] == 1 else "the text is NOT SPAM"
                 messagebox.showinfo("Prediction Result", f"The message is: {result}")
         except CustomException as e:
-            self.log_area.insert(tk.END, f"ERROR :{CustomException(e, sys)}")
+            self.log_area.insert(tk.END, f"ERROR: {str(e)}")
             self.master.update()
 
     def test_fake_news_model(self):
@@ -164,7 +165,7 @@ class SpamDetectorApp:
         try:
             user_input = simpledialog.askstring("Input", "Enter the news to test:")
             if user_input:
-                vectorizer = load_object(self.fake_news_model_vectorizer)
+                vectorizer = load_object(self.fake_news_model_vectorizer_path)  # Corrected variable name
                 trained_model = load_object(self.fake_news_model_path)
 
                 input_data = vectorizer.transform([user_input]).toarray()
@@ -173,7 +174,7 @@ class SpamDetectorApp:
                 result = "FAKE" if prediction[0] == 1 else "REAL"
                 messagebox.showinfo("Prediction Result", f"The given news is: {result}")
         except CustomException as e:
-            self.log_area.insert(tk.END, f"ERROR :{CustomException(e, sys)}")
+            self.log_area.insert(tk.END, f"ERROR: {str(e)}")
             self.master.update()
 
 if __name__ == "__main__":
